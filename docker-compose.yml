@@ -1,0 +1,19 @@
+version: '3'
+services:
+  iptv:
+    image: registry.cn-hangzhou.aliyuncs.com/sky-devops/iptv:latest
+    container_name: iptv
+    privileged: true
+    ports:
+      - "35455:35455"
+    volumes:
+      - ./config.json:/app/config.json # 可选，挂载自定义配置文件
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --cleanup --schedule "0 0 2 * * *"
+    restart: unless-stopped

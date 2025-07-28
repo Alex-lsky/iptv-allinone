@@ -1,0 +1,19 @@
+# 排除 Git 目录
+.git/
+
+# 排除 IDE 配置文件
+.vscode/
+.idea/
+
+# 排除日志文件
+*.log
+
+# 排除测试文件
+*_test.go
+
+# 排除 README 文件 (如果有的话)
+README.md
+
+# 排除 Dockerfile 和 .dockerignore 文件本身 (可选，有时需要)
+# Dockerfile
+# .dockerignore

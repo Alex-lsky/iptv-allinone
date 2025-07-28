@@ -1,0 +1,35 @@
+{
+  "server": {
+    "port": ":35455"
+  },
+  "security": {
+    "aes_key": "6354127897263145",
+    "default_ad_url_base64": "Dy0RPTwkLOSAi3QwoeiO5LCMnrV5rKJVH/en6xEmxVk="
+  },
+  "urls": {
+    "default_live_prefix": "https://www.goodiptv.club",
+    "huya_api_base": "https://live.cdn.huya.com/liveHttpUI/getLiveList",
+    "douyu_api_base": "https://www.douyu.com/gapi/rkc/directory/mixList/2_208",
+    "yy_api_base": "https://rubiks-idx.yy.com/nav/other/pnk1/448772",
+    "iptv_js_list_url": "http://live.epg.gitv.tv/tagNewestEpgList/JS_CUCC/1/100/0.json"
+  },
+  "defaults": {
+    "huya_gid": "2135",
+    "douyu_gid": "2_208",
+    "stream_type": "flv",
+    "huya_cdn": "hwcdn",
+    "huya_media": "flv",
+    "huya_response_type": "nodisplay",
+    "bilibili_platform": "web",
+    "bilibili_quality": "10000",
+    "bilibili_line": "first",
+    "youtube_quality": "1080",
+    "yy_quality": "4"
+  },
+  "test_video": {
+    "logo_url": "https://cdn.jsdelivr.net/gh/youshandefeiyang/IPTV/logo/tg.jpg",
+    "time_video_url": "https://cdn.jsdelivr.net/gh/youshandefeiyang/testvideo/time/time.mp4",
+    "test_ad_url_1": "http://159.75.85.63:5680/d/ad/h264/playad.m3u8",
+    "test_ad_url_2": "http://159.75.85.63:5680/d/ad/playad.m3u8"
+  }
+}
