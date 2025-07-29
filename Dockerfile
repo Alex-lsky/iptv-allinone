@@ -1,5 +1,5 @@
 # 使用官方 Go 运行时作为父镜像
-FROM registry.cn-hangzhou.aliyuncs.com/golang/golang:1.21-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN go build -o main .
 
 # 使用最小的 Alpine 镜像作为最终阶段
-FROM registry.cn-hangzhou.aliyuncs.com/library/alpine:latest
+FROM alpine:latest
 
 # 安装 ca-certificates 以支持 HTTPS 请求
 RUN apk --no-cache add ca-certificates
