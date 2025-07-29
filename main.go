@@ -8,6 +8,7 @@ package main
 import (
 	"Golang/list"
 	"Golang/liveurls"
+	"Golang/proxy" // Import the new proxy package
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/forgoer/openssl"
@@ -162,6 +164,74 @@ func setupRouter(adurl string) *gin.Engine {
 
 		// Write the generated M3U content to the response
 		c.String(http.StatusOK, m3uContent)
+	})
+
+	// New route for Proxied IPTV JS M3U list
+	r.GET("/proxy.m3u", func(c *gin.Context) {
+		// Call the function in list/iptv.go to generate the original M3U content
+		originalM3uContent, err := list.GetIptvJs()
+		if err != nil {
+			// If there's an error, return a 500 Internal Server Error
+			c.String(http.StatusInternalServerError, "Failed to generate original IPTV list: %v", err)
+			return
+		}
+
+		// Parse the original M3U content and replace URLs
+		// We'll implement a simple line-by-line replacement for now.
+		// A more robust M3U parser could be used in the future.
+		lines := strings.Split(originalM3uContent, "\n")
+		var newLines []string
+
+		for _, line := range lines {
+			// Check if the line is a URL (not starting with #)
+			if !strings.HasPrefix(line, "#") && strings.HasPrefix(line, "http") {
+				// This is a stream URL, replace it with our proxy URL
+				// We need to URL-encode the original URL to pass it as a query parameter
+				encodedOriginalURL := url.QueryEscape(line)
+				proxyURL := fmt.Sprintf("%s/proxy/stream?url=%s", GlobalConfig.ProxyAddress, encodedOriginalURL)
+				newLines = append(newLines, proxyURL)
+			} else {
+				// Keep the line as is (e.g., #EXTM3U, #EXTINF, empty lines)
+				newLines = append(newLines, line)
+			}
+		}
+
+		// Join the modified lines back into a single string
+		modifiedM3uContent := strings.Join(newLines, "\n")
+
+		// Set the response headers for M3U file download
+		c.Writer.Header().Set("Content-Type", "application/octet-stream")
+		c.Writer.Header().Set("Content-Disposition", "attachment; filename=proxy.m3u")
+
+		// Write the modified M3U content to the response
+		c.String(http.StatusOK, modifiedM3uContent)
+	})
+
+	// New route for proxying individual streams
+	r.GET("/proxy/stream", func(c *gin.Context) {
+		// Get the original URL from the query parameter
+		originalURL := c.Query("url")
+		if originalURL == "" {
+			c.String(http.StatusBadRequest, "Missing 'url' query parameter")
+			return
+		}
+
+		// Create an HTTP client for the proxy
+		// In a production environment, you might want to configure timeouts, etc.
+		client := &http.Client{}
+
+		// Call the ProxyStream function from the proxy package
+		// Pass the client, original URL, and the response writer
+		err := proxy.ProxyStream(client, originalURL, c.Writer)
+		if err != nil {
+			// The ProxyStream function already handles sending HTTP errors
+			// Log the error for debugging purposes
+			log.Printf("Error proxying stream from %s: %v", originalURL, err)
+			// We don't need to send another response here as it's already handled
+			return
+		}
+		// If there's no error, the stream has been successfully proxied
+		// and the response has been sent to the client.
 	})
 
 	r.GET("/:path/:rid", func(c *gin.Context) {

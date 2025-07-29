@@ -31,5 +31,7 @@
     "time_video_url": "https://cdn.jsdelivr.net/gh/youshandefeiyang/testvideo/time/time.mp4",
     "test_ad_url_1": "http://159.75.85.63:5680/d/ad/h264/playad.m3u8",
     "test_ad_url_2": "http://159.75.85.63:5680/d/ad/playad.m3u8"
-  }
+  },
+  "proxy_enabled": true,
+  "proxy_address": "http://127.0.0.1:35455"
 }

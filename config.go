@@ -41,6 +41,10 @@ type Config struct {
 		TestAdURL1   string `json:"test_ad_url_1"`
 		TestAdURL2   string `json:"test_ad_url_2"`
 	} `json:"test_video"`
+	// ProxyEnabled enables or disables the proxy functionality
+	ProxyEnabled bool `json:"proxy_enabled"`
+	// ProxyAddress is the public address of the proxy server
+	ProxyAddress string `json:"proxy_address"`
 }
 
 // GlobalConfig 用于存储全局配置
