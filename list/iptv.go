@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -112,6 +113,18 @@ func GetIptvJs() (string, error) {
 		}
 
 		playUrlReal := playData.U
+
+		// Parse the original playUrl to extract query parameters
+		parsedUrl, err := url.Parse(playUrl)
+		if err != nil {
+			fmt.Printf("Error parsing original play URL for %s: %v\n", chnName, err)
+			// If parsing fails, we'll just use playUrlReal as is
+		} else {
+			// Append the raw query from the original URL to playUrlReal
+			if parsedUrl.RawQuery != "" {
+				playUrlReal += "?" + parsedUrl.RawQuery
+			}
+		}
 
 		// 3b. Determine group and tvg-name
 		groupName := getGroupInfo(chnName)
