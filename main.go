@@ -221,8 +221,8 @@ func setupRouter(adurl string) *gin.Engine {
 		client := &http.Client{}
 
 		// Call the ProxyStream function from the proxy package
-		// Pass the client, original URL, and the response writer
-		err := proxy.ProxyStream(client, originalURL, c.Writer)
+		// Pass the client, original URL, the response writer, and the proxy address
+		err := proxy.ProxyStream(client, originalURL, c.Writer, GlobalConfig.ProxyAddress)
 		if err != nil {
 			// The ProxyStream function already handles sending HTTP errors
 			// Log the error for debugging purposes
