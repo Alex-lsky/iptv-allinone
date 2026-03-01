@@ -1,19 +1,42 @@
-# 排除 Git 目录
+# Git 目录
 .git/
+.gitignore
 
-# 排除 IDE 配置文件
+# IDE 配置
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# 排除日志文件
+# 日志文件
 *.log
 
-# 排除测试文件
+# 测试文件
 *_test.go
+test_*.go
+test_*.bat
+test_*.sh
 
-# 排除 README 文件 (如果有的话)
+# 文档
 README.md
 
-# 排除 Dockerfile 和 .dockerignore 文件本身 (可选，有时需要)
-# Dockerfile
-# .dockerignore
+# 构建产物
+*.exe
+main
+*.dll
+*.so
+
+# 临时文件
+*.tmp
+*.bak
+
+# 本地配置（如果有的话）
+config.local.json
+
+# 脚本文件（构建时不需要）
+build_push.sh
+build_push.bat
+
+# Docker 相关文件（构建时不需要）
+docker-compose.yml
