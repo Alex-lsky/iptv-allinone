@@ -287,6 +287,34 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	// 初始化缓存配置
+	cacheConfig := &proxy.CacheConfig{
+		EnableCache:             GlobalConfig.Cache.EnableCache,
+		M3U8PreloadCount:        GlobalConfig.Cache.M3U8PreloadCount,
+		SegmentBufferSize:       GlobalConfig.Cache.SegmentBufferSize,
+		StreamBufferSize:        GlobalConfig.Cache.StreamBufferSize,
+		PreloadTimeout:          GlobalConfig.Cache.PreloadTimeout,
+		MaxRetries:              GlobalConfig.Cache.MaxRetries,
+		RetryDelay:              GlobalConfig.Cache.RetryDelay,
+		ChannelCacheEnabled:     GlobalConfig.Cache.ChannelCacheEnabled,
+		ChannelCacheMaxMemoryMB: GlobalConfig.Cache.ChannelCacheMaxMemoryMB,
+	}
+	proxy.SetGlobalConfig(cacheConfig)
+
+	// 初始化频道缓存管理器
+	if GlobalConfig.Cache.ChannelCacheEnabled {
+		httpClient := &http.Client{
+			Timeout: time.Duration(GlobalConfig.Cache.PreloadTimeout) * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:        100,
+				MaxIdleConnsPerHost: 10,
+				IdleConnTimeout:     90 * time.Second,
+			},
+		}
+		proxy.InitChannelCacheManager(cacheConfig, httpClient, GlobalConfig.Cache.ChannelCacheMaxMemoryMB)
+		log.Printf("[缓存] 频道缓存已启用，最大内存：%d MB", GlobalConfig.Cache.ChannelCacheMaxMemoryMB)
+	}
+
 	key := []byte(GlobalConfig.Security.AESKey)
 	defstr, _ := base64.StdEncoding.DecodeString(GlobalConfig.Security.DefaultAdURLBase64)
 	defurl, _ := openssl.AesECBDecrypt(defstr, key, openssl.PKCS7_PADDING)

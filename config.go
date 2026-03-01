@@ -45,6 +45,22 @@ type Config struct {
 	ProxyEnabled bool `json:"proxy_enabled"`
 	// ProxyAddress is the public address of the proxy server
 	ProxyAddress string `json:"proxy_address"`
+	// Cache 缓存配置
+	Cache CacheConfig `json:"cache"`
+}
+
+// CacheConfig 缓存配置结构
+type CacheConfig struct {
+	EnableCache       bool  `json:"enable_cache"`
+	M3U8PreloadCount  int   `json:"m3u8_preload_count"`
+	SegmentBufferSize int64 `json:"segment_buffer_size"`
+	StreamBufferSize  int   `json:"stream_buffer_size"`
+	PreloadTimeout    int   `json:"preload_timeout"`
+	MaxRetries        int   `json:"max_retries"`
+	RetryDelay        int   `json:"retry_delay"`
+	// 频道缓存配置
+	ChannelCacheEnabled     bool `json:"channel_cache_enabled"`
+	ChannelCacheMaxMemoryMB int  `json:"channel_cache_max_memory_mb"` // 频道缓存最大内存 (MB)
 }
 
 // GlobalConfig 用于存储全局配置
