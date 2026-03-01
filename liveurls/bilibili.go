@@ -33,7 +33,7 @@ func (b *BiliBili) GetRealRoomID() any {
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 	json.Unmarshal(body, &firstmap)
-	if firstmap["msg"] == "直播间不存在" {
+	if firstmap["msg"] == "鐩存挱闂翠笉瀛樺湪" {
 		return nil
 	}
 	if newmap, ok := firstmap["data"].(map[string]any); ok {

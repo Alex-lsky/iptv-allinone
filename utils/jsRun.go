@@ -26,7 +26,7 @@ func (j *JsUtil) getVm() *js.Runtime {
 }
 
 func (j *JsUtil) putVm(vm *js.Runtime) {
-	vm.Set("global", nil) // 清除全局对象
+	vm.Set("global", nil) // 娓呴櫎鍏ㄥ眬瀵硅薄
 	j.pool.Put(vm)
 }
 
@@ -39,7 +39,7 @@ func (j *JsUtil) JsRun(funcContent []string, params ...any) any {
 	}
 	jsfn, ok := js.AssertFunction(vm.Get(funcContent[1]))
 	if !ok {
-		return fmt.Errorf("执行函数失败")
+		return fmt.Errorf("鎵ц鍑芥暟澶辫触")
 	}
 	jsValues := make([]js.Value, 0, len(params))
 	for _, v := range params {

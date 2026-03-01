@@ -1,67 +1,30 @@
 name: Docker Build and Push to Aliyun
 
-# 触发条件
 on:
   push:
     branches:
-      - main          # main 分支推送时触发
-      - master        # 兼容 master 分支
-  pull_request:
-    branches:
-      - main          # PR 到 main 分支时也触发（但不推送）
+      - main
+      - master
 
-# 环境变量
 env:
   REGISTRY: registry.cn-hangzhou.aliyuncs.com
   NAMESPACE: sky-devops
   IMAGE_NAME: iptv
 
 jobs:
-  # ========================================
-  # 任务 1: 代码检查和单元测试
-  # ========================================
-  lint-and-test:
-    name: Lint and Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-          cache: true
-
-      - name: Go Mod Download
-        run: go mod download
-
-      - name: Go Build
-        run: go build -v ./...
-
-      - name: Go Test
-        run: go test -v ./... || echo "No tests found, skipping..."
-
-  # ========================================
-  # 任务 2: 构建并推送 Docker 镜像
-  # ========================================
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    needs: lint-and-test  # 依赖 lint-and-test 任务成功
     
     steps:
-      # 步骤 1: 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 获取完整 git 历史用于版本计算
+          fetch-depth: 0
 
-      # 步骤 2: 设置 QEMU（支持多架构构建）
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # 步骤 3: 设置 Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -69,7 +32,6 @@ jobs:
             image=moby/buildkit:latest
             platform=linux/amd64,linux/arm64
 
-      # 步骤 4: 登录阿里云容器镜像服务
       - name: Login to Aliyun Container Registry
         uses: docker/login-action@v3
         with:
@@ -77,39 +39,27 @@ jobs:
           username: ${{ secrets.ALIYUN_USERNAME }}
           password: ${{ secrets.ALIYUN_PASSWORD }}
 
-      # 步骤 5: 提取元数据（版本号等）
       - name: Extract metadata
         id: meta
         run: |
-          # 获取短 commit hash
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_OUTPUT
-          
-          # 获取当前日期时间
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_OUTPUT
-          
-          # 生成版本号：日期 + 短 commit hash
           VERSION=$(date +"%Y%m%d")-${SHORT_SHA}
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          
-          # 如果是 tag 推送，使用 tag 作为版本
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             TAG_VERSION=${GITHUB_REF#refs/tags/}
             echo "VERSION=$TAG_VERSION" >> $GITHUB_OUTPUT
-            echo "IS_TAG=true" >> $GITHUB_OUTPUT
-          else
-            echo "IS_TAG=false" >> $GITHUB_OUTPUT
           fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-      # 步骤 6: 构建并推送镜像
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}  # PR 不推送
+          push: true
           pull: true
           build-args: |
             VERSION=${{ steps.meta.outputs.VERSION }}
@@ -119,46 +69,17 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.VERSION }}
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.SHORT_SHA }}
-          labels: |
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ steps.meta.outputs.VERSION }}
-            org.opencontainers.image.created=${{ steps.meta.outputs.BUILD_TIME }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 步骤 7: 输出构建结果
       - name: Build summary
         if: always()
         run: |
-          echo "## 📦 构建摘要" >> $GITHUB_STEP_SUMMARY
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.meta.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**提交 SHA:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**分支:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**版本:** ${{ steps.meta.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "**构建时间:** ${{ steps.meta.outputs.BUILD_TIME }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🏷️ 镜像标签" >> $GITHUB_STEP_SUMMARY
-          echo "- \`latest\`: \`${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`version\`: \`${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`commit\`: \`${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.SHORT_SHA }}\`" >> $GITHUB_STEP_SUMMARY
-
-  # ========================================
-  # 任务 3: 部署通知（可选）
-  # ========================================
-  notify:
-    name: Deployment Notification
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: always() && github.event_name != 'pull_request'
-    steps:
-      - name: Notify deployment status
-        run: |
-          STATUS="${{ needs.build-and-push.result }}"
-          if [ "$STATUS" == "success" ]; then
-            echo "✅ 部署成功！"
-            echo "镜像地址：${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest"
-          else
-            echo "❌ 部署失败！请检查构建日志"
-            exit 1
-          fi
+          echo "### Image Tags" >> $GITHUB_STEP_SUMMARY
+          echo "- latest: \`${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- version: \`${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY

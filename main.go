@@ -6,12 +6,12 @@
 package main
 
 import (
-	"Golang/list"
-	"Golang/liveurls"
-	"Golang/proxy" // Import the new proxy package
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"iotv/list"
+	"iotv/liveurls"
+	"iotv/proxy" // Import the new proxy package
 	"log"
 	"net/http"
 	"net/url"
@@ -221,8 +221,8 @@ func setupRouter(adurl string) *gin.Engine {
 		client := &http.Client{}
 
 		// Call the ProxyStream function from the proxy package
-		// Pass the client, original URL, the response writer, and the proxy address
-		err := proxy.ProxyStream(client, originalURL, c.Writer, GlobalConfig.ProxyAddress)
+		// Pass the client, original URL, and the response writer
+		err := proxy.ProxyStream(client, originalURL, c.Writer)
 		if err != nil {
 			// The ProxyStream function already handles sending HTTP errors
 			// Log the error for debugging purposes
@@ -285,34 +285,6 @@ func main() {
 	// Load configuration
 	if err := LoadConfig("config.json"); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
-	}
-
-	// 初始化缓存配置
-	cacheConfig := &proxy.CacheConfig{
-		EnableCache:             GlobalConfig.Cache.EnableCache,
-		M3U8PreloadCount:        GlobalConfig.Cache.M3U8PreloadCount,
-		SegmentBufferSize:       GlobalConfig.Cache.SegmentBufferSize,
-		StreamBufferSize:        GlobalConfig.Cache.StreamBufferSize,
-		PreloadTimeout:          GlobalConfig.Cache.PreloadTimeout,
-		MaxRetries:              GlobalConfig.Cache.MaxRetries,
-		RetryDelay:              GlobalConfig.Cache.RetryDelay,
-		ChannelCacheEnabled:     GlobalConfig.Cache.ChannelCacheEnabled,
-		ChannelCacheMaxMemoryMB: GlobalConfig.Cache.ChannelCacheMaxMemoryMB,
-	}
-	proxy.SetGlobalConfig(cacheConfig)
-
-	// 初始化频道缓存管理器
-	if GlobalConfig.Cache.ChannelCacheEnabled {
-		httpClient := &http.Client{
-			Timeout: time.Duration(GlobalConfig.Cache.PreloadTimeout) * time.Second,
-			Transport: &http.Transport{
-				MaxIdleConns:        100,
-				MaxIdleConnsPerHost: 10,
-				IdleConnTimeout:     90 * time.Second,
-			},
-		}
-		proxy.InitChannelCacheManager(cacheConfig, httpClient, GlobalConfig.Cache.ChannelCacheMaxMemoryMB)
-		log.Printf("[缓存] 频道缓存已启用，最大内存：%d MB", GlobalConfig.Cache.ChannelCacheMaxMemoryMB)
 	}
 
 	key := []byte(GlobalConfig.Security.AESKey)

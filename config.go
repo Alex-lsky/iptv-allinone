@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// Config 定义了应用程序的配置结构
+// Config 瀹氫箟浜嗗簲鐢ㄧ▼搴忕殑閰嶇疆缁撴瀯
 type Config struct {
 	Server struct {
 		Port string `json:"port"`
@@ -45,11 +45,11 @@ type Config struct {
 	ProxyEnabled bool `json:"proxy_enabled"`
 	// ProxyAddress is the public address of the proxy server
 	ProxyAddress string `json:"proxy_address"`
-	// Cache 缓存配置
+	// Cache 缂撳瓨閰嶇疆
 	Cache CacheConfig `json:"cache"`
 }
 
-// CacheConfig 缓存配置结构
+// CacheConfig 缂撳瓨閰嶇疆缁撴瀯
 type CacheConfig struct {
 	EnableCache       bool  `json:"enable_cache"`
 	M3U8PreloadCount  int   `json:"m3u8_preload_count"`
@@ -58,26 +58,26 @@ type CacheConfig struct {
 	PreloadTimeout    int   `json:"preload_timeout"`
 	MaxRetries        int   `json:"max_retries"`
 	RetryDelay        int   `json:"retry_delay"`
-	// 频道缓存配置
+	// 棰戦亾缂撳瓨閰嶇疆
 	ChannelCacheEnabled     bool `json:"channel_cache_enabled"`
-	ChannelCacheMaxMemoryMB int  `json:"channel_cache_max_memory_mb"` // 频道缓存最大内存 (MB)
+	ChannelCacheMaxMemoryMB int  `json:"channel_cache_max_memory_mb"` // 棰戦亾缂撳瓨鏈€澶у唴瀛?(MB)
 }
 
-// GlobalConfig 用于存储全局配置
+// GlobalConfig 鐢ㄤ簬瀛樺偍鍏ㄥ眬閰嶇疆
 var GlobalConfig Config
 
-// LoadConfig 从指定路径加载配置文件
+// LoadConfig 浠庢寚瀹氳矾寰勫姞杞介厤缃枃浠?
 func LoadConfig(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("无法打开配置文件 %s: %v", path, err)
+		return fmt.Errorf("鏃犳硶鎵撳紑閰嶇疆鏂囦欢 %s: %v", path, err)
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&GlobalConfig)
 	if err != nil {
-		return fmt.Errorf("无法解析配置文件 %s: %v", path, err)
+		return fmt.Errorf("鏃犳硶瑙ｆ瀽閰嶇疆鏂囦欢 %s: %v", path, err)
 	}
 
 	return nil
